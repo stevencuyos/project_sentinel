@@ -102,6 +102,14 @@
     }
 
     /* ─────────────────────────────────────────
+       CUSTOM SCROLLBAR
+    ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline-variant); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--md-sys-color-outline); }
+
+    /* ─────────────────────────────────────────
        RESET & BASE
     ───────────────────────────────────────── */
     *{box-sizing:border-box;margin:0;padding:0}
@@ -665,7 +673,7 @@
     /* ─────────────────────────────────────────
        GENERAL TOAST
     ───────────────────────────────────────── */
-    #toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:14px 24px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:bottom .3s cubic-bezier(.2,0,0,1);z-index:9999;font-weight:500}
+    #toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:14px 24px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:bottom .3s cubic-bezier(.2,0,0,1);z-index:9999;font-weight:500; display:flex; align-items:center; gap:8px;}
     #toast.show{bottom:88px}
 
     /* ─────────────────────────────────────────
@@ -1280,7 +1288,8 @@
       <div class="top-nav" id="topNav">
         <div class="top-search" id="topSearch">
           <span class="material-symbols-outlined" style="color:var(--md-sys-color-on-surface-variant)">search</span>
-          <input type="text" id="searchInput" placeholder="Search cases…" onkeyup="applyFilters()">
+          <input type="text" id="searchInput" placeholder="Search cases…" oninput="handleSearchInput()">
+          <span id="clearSearchBtn" class="material-symbols-outlined" style="display:none; color:var(--text-muted); cursor:pointer; font-size:16px; margin-right:8px;" onclick="clearSearch()">close</span>
           <span id="filterIndicator" style="display:none;font-size:11px;font-weight:700;background:var(--md-sys-color-primary);color:#fff;padding:2px 8px;border-radius:99px;margin-left:8px;white-space:nowrap;">Filters active</span>
           <span onclick="openCommandPalette()" title="Command palette" style="cursor:pointer;font-size:11px;font-weight:700;color:var(--text-muted);border:1px solid var(--md-sys-color-outline-variant);border-radius:6px;padding:2px 6px;margin-left:8px;white-space:nowrap;">⌘K</span>
       </div>
@@ -1379,9 +1388,9 @@
             </div>
             <div style="display:flex; align-items:center; gap:8px; background:var(--md-sys-color-surface-container-high); padding:4px 12px; border-radius:20px;">
               <span class="material-symbols-outlined" style="font-size:18px; color:var(--text-muted)">calendar_today</span>
-              <input type="date" id="startDate" class="m3-select" style="border:none; background:transparent; padding:0; height:32px; min-width:unset; font-size:12px;" onchange="applyFilters()">
+              <input type="date" id="startDate" class="m3-select" style="border:none; background:transparent; padding:0; height:32px; min-width:unset; font-size:12px; font-family:'Google Sans'; color:var(--text-main);" onchange="applyFilters()">
               <span style="font-size:12px; color:var(--text-muted)">to</span>
-              <input type="date" id="endDate" class="m3-select" style="border:none; background:transparent; padding:0; height:32px; min-width:unset; font-size:12px;" onchange="applyFilters()">
+              <input type="date" id="endDate" class="m3-select" style="border:none; background:transparent; padding:0; height:32px; min-width:unset; font-size:12px; font-family:'Google Sans'; color:var(--text-main);" onchange="applyFilters()">
             </div>
           </div>
         </div>
@@ -1441,9 +1450,9 @@
               </select>
             </div>
             <div class="premium-select-wrap" id="metricsCustomRangeWrap" style="display:none;gap:6px;">
-              <input type="date" id="metricsCustomStart" class="metrics-select" style="width:130px;" onchange="renderMetricsUI()">
+              <input type="date" id="metricsCustomStart" class="metrics-select" style="width:130px; font-family:'Google Sans'; color:var(--text-main);" onchange="renderMetricsUI()">
               <span style="color:var(--text-muted);font-size:12px;">to</span>
-              <input type="date" id="metricsCustomEnd" class="metrics-select" style="width:130px;" onchange="renderMetricsUI()">
+              <input type="date" id="metricsCustomEnd" class="metrics-select" style="width:130px; font-family:'Google Sans'; color:var(--text-main);" onchange="renderMetricsUI()">
             </div>
             <button class="btn-primary" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 16px; border-radius:12px;" onclick="exportWBR()">
               <span class="material-symbols-outlined">download</span> Export
@@ -2081,9 +2090,16 @@ window.onload = function() {
     /* ─────────────────────────────────────────
        TOAST
     ───────────────────────────────────────── */
-    function showToast(msg) {
+    function showToast(msg, type) {
       var t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
+      var icon = 'info';
+      var color = 'inherit';
+      if (type === 'success' || msg.includes('✅') || msg.includes('successful')) { icon = 'check_circle'; color = '#34C759'; msg = msg.replace('✅ ', ''); }
+      else if (type === 'error' || msg.includes('❌') || msg.includes('failed')) { icon = 'error'; color = '#FF3B30'; msg = msg.replace('❌ ', ''); }
+      else if (type === 'warn' || msg.includes('⚠️')) { icon = 'warning'; color = '#FFCC00'; msg = msg.replace('⚠️ ', ''); }
+
+      t.innerHTML = '<span class="material-symbols-outlined" style="color:' + color + ';">' + icon + '</span><span>' + esc(msg) + '</span>';
+      t.classList.add('show');
       setTimeout(function() { t.classList.remove('show'); }, 3000);
     }
 
@@ -2466,6 +2482,19 @@ window.onload = function() {
       var showMine = mineOnlyFilter && currentTab === 'active';
       el.textContent = showMine ? 'My Cases only' : 'Filters active';
       el.style.display = (showMine || (hidden && (hasChannelFilter || hasTeamFilter))) ? 'inline-block' : 'none';
+    }
+
+    function handleSearchInput() {
+      var val = document.getElementById('searchInput').value;
+      document.getElementById('clearSearchBtn').style.display = val ? 'inline-block' : 'none';
+      applyFilters();
+    }
+    function clearSearch() {
+      var el = document.getElementById('searchInput');
+      el.value = '';
+      document.getElementById('clearSearchBtn').style.display = 'none';
+      el.focus();
+      applyFilters();
     }
 
     function updateSearchPlaceholder(tab) {
@@ -3132,8 +3161,8 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
           }
         });
 
-        html += '<div class="case-row case-elevated" style="margin-bottom:12px; border-left:4px solid #1a7f37">' +
-          '<div class="row-main" onclick="this.parentElement.classList.toggle(\'expanded\')">' +
+        html += '<div class="case-row case-elevated" style="margin-bottom:12px; border-left:4px solid #1a7f37; cursor:pointer;" onclick="this.classList.toggle(\'expanded\')">' +
+          '<div class="row-main">' +
             getMomaImgClass(c.ldap, 'row-avatar', 48) +
             '<div class="row-content">' +
               '<div style="display:flex; align-items:center; gap:8px;">' +
@@ -3950,6 +3979,10 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         counter.textContent = count + ' / ' + max;
         counter.style.color = count > max ? 'var(--md-sys-color-error)' : 'var(--text-muted)';
       }
+
+      // Auto-resize
+      el.style.height = 'auto';
+      el.style.height = (el.scrollHeight) + 'px';
     }
 
     function openEscalationModal() {
@@ -4000,6 +4033,7 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         if (el) {
           el.value = '';
           el.classList.remove('error');
+          if (el.tagName.toLowerCase() === 'textarea') el.style.height = 'auto';
         }
       });
       document.getElementById('f-team-selected').innerHTML = '<span style="color:var(--text-muted)">— Select Team —</span>';
