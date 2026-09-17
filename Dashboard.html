@@ -1516,12 +1516,17 @@
         </div>
 
         <!-- Tables -->
-        <div class="metrics-section-label">SME Efficiency Tracker</div>
+        <div class="metrics-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>SME Efficiency Tracker</span>
+          <button class="btn-icon" onclick="copyTableData('smeTable')" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
+        </div>
         <div class="metrics-table-wrap">
-          <table class="metrics-table">
+          <table class="metrics-table" id="smeTable">
             <thead><tr>
-              <th>Subject Matter Expert</th><th>Cases Resolved</th>
-              <th>Active Locks</th><th>Avg Turnaround Time</th>
+              <th style="cursor:pointer" onclick="sortSmeTable('ldap')">Subject Matter Expert ↕</th>
+              <th style="cursor:pointer" onclick="sortSmeTable('resolved')">Cases Resolved ↕</th>
+              <th style="cursor:pointer" onclick="sortSmeTable('locks')">Active Locks ↕</th>
+              <th style="cursor:pointer" onclick="sortSmeTable('avgMin')">Avg Turnaround Time ↕</th>
             </tr></thead>
             <tbody id="smeMetricsBody"></tbody>
           </table>
@@ -1535,10 +1540,11 @@
             <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-muted);"><span style="width:8px;height:8px;border-radius:50%;background:#B06000;display:inline-block;"></span>Policy</span>
             <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-muted);"><span style="width:8px;height:8px;border-radius:50%;background:#137333;display:inline-block;"></span>Process</span>
             <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-muted);"><span style="width:8px;height:8px;border-radius:50%;background:#5f6368;display:inline-block;"></span>Other</span>
+            <button class="btn-icon" onclick="copyTableData('driverTable')" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
           </div>
         </div>
         <div class="metrics-table-wrap">
-          <table class="metrics-table">
+          <table class="metrics-table" id="driverTable">
             <thead><tr>
               <th>Escalation Driver</th><th>Count</th><th>Distribution</th><th>% of Total</th>
             </tr></thead>
@@ -1546,9 +1552,12 @@
           </table>
         </div>
 
-        <div class="metrics-section-label">Floor Performance (Agent Tracking)</div>
+        <div class="metrics-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Floor Performance (Agent Tracking)</span>
+          <button class="btn-icon" onclick="copyTableData('agentTable')" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
+        </div>
         <div class="metrics-table-wrap">
-          <table class="metrics-table">
+          <table class="metrics-table" id="agentTable">
             <thead><tr>
               <th style="cursor:pointer" onclick="sortMetrics('ldap')">Agent LDAP ↕</th>
               <th style="cursor:pointer" onclick="sortMetrics('total')">Total ↕</th>
@@ -1780,6 +1789,7 @@
     var RESOLVED_LIMIT   = 20;
     var agentStatsArray  = [];
     var currentSort      = { col: 'total', dir: 'desc' };
+    var smeSort          = { col: 'resolved', dir: 'desc' };
     var autoRefreshTimer = null;
     var expandedCards    = new Set();
     var mineOnlyFilter    = false;
@@ -3435,6 +3445,12 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
     }
 
     function renderMetricsUI() {
+      var viewMetrics = document.getElementById('view-metrics');
+      if (viewMetrics) {
+        viewMetrics.style.transition = 'opacity 0.2s';
+        viewMetrics.style.opacity = '0.5';
+      }
+
       var team = document.getElementById('metricsTeamFilter').value;
       var timebox = document.getElementById('metricsTimebox').value;
       var range = getTimeboxRange(timebox);
@@ -3470,6 +3486,10 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       });
       agentStatsArray = Object.values(agentMap);
       renderAgentTable();
+
+      setTimeout(function() {
+        if (viewMetrics) viewMetrics.style.opacity = '1';
+      }, 50);
     }
 
     function updateSummaryCards(curr, prev, range, pRange, team) {
@@ -3603,6 +3623,13 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
     }
 
     function updateTrendChart(data, range, timebox) {
+      var container = document.querySelector("#trendChart");
+      if (!data.length) {
+        if (trendChart) { trendChart.destroy(); trendChart = null; }
+        container.innerHTML = '<div class="heatmap-empty"><span class="material-symbols-outlined" style="font-size:40px;opacity:.35">show_chart</span><div>No data for this period</div></div>';
+        return;
+      }
+      container.innerHTML = '';
       var seriesData = [];
       var categories = [];
 
@@ -3653,6 +3680,14 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
     }
 
     function updateChannelDonut(data) {
+      var container = document.querySelector("#channelDonut");
+      if (!data.length) {
+        if (channelDonut) { channelDonut.destroy(); channelDonut = null; }
+        container.innerHTML = '<div class="heatmap-empty"><span class="material-symbols-outlined" style="font-size:40px;opacity:.35">donut_large</span><div>No data for this period</div></div>';
+        return;
+      }
+      container.innerHTML = '';
+
       var counts = { Chat: 0, Email: 0, Phone: 0 };
       data.forEach(function(c) { if (counts.hasOwnProperty(c.channel)) counts[c.channel]++; });
 
@@ -3672,6 +3707,14 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
     }
 
     function updateSymptomBar(data) {
+      var container = document.querySelector("#symptomBar");
+      if (!data.length) {
+        if (symptomBar) { symptomBar.destroy(); symptomBar = null; }
+        container.innerHTML = '<div class="heatmap-empty"><span class="material-symbols-outlined" style="font-size:40px;opacity:.35">bar_chart</span><div>No data for this period</div></div>';
+        return;
+      }
+      container.innerHTML = '';
+
       var syms = {};
       data.forEach(function(c) {
         var s = (c.symptom || 'Other').trim();
@@ -3766,20 +3809,52 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       return streak;
     }
 
+    var smeStatsArray = [];
+    function sortSmeTable(col) {
+      smeSort.dir = smeSort.col === col ? (smeSort.dir === 'asc' ? 'desc' : 'asc') : 'desc';
+      smeSort.col = col;
+      renderSmeTable();
+    }
+
+    function renderSmeTable() {
+      var sorted = smeStatsArray.slice().sort(function(a,b) {
+        var va = a[smeSort.col], vb = b[smeSort.col];
+        if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+        if (va < vb) return smeSort.dir === 'asc' ? -1 : 1;
+        if (va > vb) return smeSort.dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      var smeHtml = '';
+      sorted.forEach(function(st) {
+        var badges = '';
+        if (st.isFastest) badges += '<span class="gami-badge gami-fastest"><span class="material-symbols-outlined" style="font-size:11px">bolt</span>Fastest</span>';
+        if (st.streak >= 3) badges += '<span class="gami-badge gami-streak"><span class="material-symbols-outlined" style="font-size:11px">local_fire_department</span>' + st.streak + 'd streak</span>';
+        smeHtml += '<tr>' +
+          '<td><div style="display:flex;align-items:center;gap:12px;font-weight:500">' + getMomaImg(st.ldap) + st.ldap + badges + '</div></td>' +
+          '<td>' + st.resolved + '</td>' +
+          '<td>' + st.locks + '</td>' +
+          '<td>' + tatChip(st.avgMin) + '</td>' +
+        '</tr>';
+      });
+      document.getElementById('smeMetricsBody').innerHTML = smeHtml ||
+        '<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:24px">No SME data for this period.</td></tr>';
+    }
+
     function updateSmeTable(data, team) {
       var smes = {};
       rawActiveCases.forEach(function(c) {
         if (team && c.team !== team) return;
         if (c.status==='In Progress' && c.claimedBy) {
           var s = c.claimedBy.split('@')[0].toLowerCase().trim();
-          if (!smes[s]) smes[s]={resolved:0,totalMins:0,locks:0};
+          if (!smes[s]) smes[s]={ldap:s, resolved:0, totalMins:0, locks:0, avgMin:0};
           smes[s].locks++;
         }
       });
       data.forEach(function(c) {
         if (!c.handledBy) return;
         var s = c.handledBy.split('@')[0].toLowerCase().trim();
-        if (!smes[s]) smes[s]={resolved:0,totalMins:0,locks:0};
+        if (!smes[s]) smes[s]={ldap:s, resolved:0, totalMins:0, locks:0, avgMin:0};
         smes[s].resolved++;
         var startTs = c.claimedAt || c.timestamp;
         var end = new Date(c.resolutionTime).getTime();
@@ -3788,30 +3863,23 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       });
 
       var fastestLdap = null, fastestAvg = Infinity;
-      Object.keys(smes).forEach(function(s) {
+      smeStatsArray = Object.keys(smes).map(function(s) {
         var st = smes[s];
-        if (st.resolved < 3) return;
-        var avg = st.totalMins / st.resolved;
-        if (avg < fastestAvg) { fastestAvg = avg; fastestLdap = s; }
+        st.avgMin = st.resolved > 0 ? st.totalMins / st.resolved : 0;
+        st.streak = computeSmeStreak(s);
+
+        if (st.resolved >= 3 && st.avgMin < fastestAvg) {
+            fastestAvg = st.avgMin;
+            fastestLdap = s;
+        }
+        return st;
       });
 
-      var smeHtml = '';
-      Object.keys(smes).sort().forEach(function(s) {
-        var st = smes[s];
-        var avgMin = st.resolved>0 ? st.totalMins/st.resolved : 0;
-        var streak = computeSmeStreak(s);
-        var badges = '';
-        if (s === fastestLdap) badges += '<span class="gami-badge gami-fastest"><span class="material-symbols-outlined" style="font-size:11px">bolt</span>Fastest</span>';
-        if (streak >= 3) badges += '<span class="gami-badge gami-streak"><span class="material-symbols-outlined" style="font-size:11px">local_fire_department</span>' + streak + 'd streak</span>';
-        smeHtml += '<tr>' +
-          '<td><div style="display:flex;align-items:center;gap:12px;font-weight:500">' + getMomaImg(s) + s + badges + '</div></td>' +
-          '<td>' + st.resolved + '</td>' +
-          '<td>' + st.locks + '</td>' +
-          '<td>' + tatChip(avgMin) + '</td>' +
-        '</tr>';
+      smeStatsArray.forEach(function(st) {
+          st.isFastest = (st.ldap === fastestLdap);
       });
-      document.getElementById('smeMetricsBody').innerHTML = smeHtml ||
-        '<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:24px">No SME data for this period.</td></tr>';
+
+      renderSmeTable();
     }
 
     function updateDriverTable(data) {
@@ -3890,11 +3958,15 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         var pppPct = ag.total>0 ? Math.round((ag.ppp/ag.total)*100) : 0;
         var cbPct  = ag.total>0 ? Math.round((ag.callback/ag.total)*100) : 0;
         var isHot  = ag.total>=10 && pppPct>=50;
+
+        var cbBar = '<div style="background:var(--md-sys-color-surface-variant); border-radius:4px; height:6px; width:60px; margin-top:4px; overflow:hidden;"><div style="background:var(--md-sys-color-tertiary); height:100%; width:' + cbPct + '%"></div></div>';
+        var pppBar = '<div style="background:var(--md-sys-color-surface-variant); border-radius:4px; height:6px; width:60px; margin-top:4px; overflow:hidden;"><div style="background:var(--md-sys-color-primary); height:100%; width:' + pppPct + '%"></div></div>';
+
         html += '<tr>' +
           '<td><div style="display:flex;align-items:center;gap:12px;font-weight:500">' + getMomaImg(ag.ldap) + esc(ag.ldap) + '</div></td>' +
           '<td style="font-weight:700">' + (isHot ? '<span class="heat-red">' + ag.total + '</span>' : ag.total) + '</td>' +
-          '<td>' + cbPct + '%</td>' +
-          '<td>' + (isHot ? '<span class="heat-red">' + pppPct + '%</span>' : pppPct + '%') + '</td>' +
+          '<td>' + cbPct + '%' + cbBar + '</td>' +
+          '<td>' + (isHot ? '<span class="heat-red">' + pppPct + '%</span>' : pppPct + '%') + pppBar + '</td>' +
         '</tr>';
       });
       document.getElementById('agentMetricsBody').innerHTML = html || '<tr><td colspan="4" style="text-align:center;padding:24px">No data.</td></tr>';
@@ -3912,6 +3984,29 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         sel.innerHTML += '<option value="' + escAttr(t) + '">' + esc(t) + '</option>';
       });
       sel.value = current;
+    }
+
+    function copyTableData(tableId) {
+      var table = document.getElementById(tableId);
+      if (!table) return;
+      var rows = table.querySelectorAll('tr');
+      var tsv = '';
+      rows.forEach(function(row) {
+        if (row.style.display === 'none') return;
+        var cols = row.querySelectorAll('th, td');
+        var rowData = [];
+        cols.forEach(function(col) {
+          // If the column contains the visual bar for % (like Agent table), just get textContent
+          // Also strip out any newlines and extra spaces
+          rowData.push(col.textContent.trim().replace(/\s+/g, ' '));
+        });
+        tsv += rowData.join('\t') + '\n';
+      });
+      navigator.clipboard.writeText(tsv).then(function() {
+        showToast('✅ Table copied to clipboard!', 'success');
+      }).catch(function(err) {
+        showToast('❌ Copy failed: ' + err, 'error');
+      });
     }
 
     /* ─────────────────────────────────────────
