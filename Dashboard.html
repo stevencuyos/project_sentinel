@@ -573,6 +573,14 @@
     }
     .case-dimmed:hover { opacity: 1; transform: none; }
 
+    .case-row.focused-row {
+      border-color: var(--md-sys-color-primary);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+    }
+    .case-row.focused-row .row-main {
+      background: var(--hover-bg);
+    }
+
     .row-main{padding:12px 20px;display:flex;align-items:flex-start;gap:16px;cursor:pointer;position:relative}
     .row-checkbox-wrap{padding-top:8px}
     .row-avatar{width:40px;height:40px;border-radius:20px;object-fit:cover;flex-shrink:0;background:var(--md-sys-color-surface-variant)}
@@ -686,6 +694,12 @@
     .skel-anim{background:linear-gradient(90deg,var(--bg-main) 25%,var(--hover-bg) 50%,var(--bg-main) 75%);background-size:200% 100%;animation:loadSkel 1.5s infinite}
     @keyframes loadSkel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+    .chart-skeleton {
+      width: 100%; height: 280px; border-radius: 12px; margin-top: 16px;
+      background: linear-gradient(90deg, var(--md-sys-color-surface-container-high) 25%, var(--md-sys-color-surface-variant) 50%, var(--md-sys-color-surface-container-high) 75%);
+      background-size: 200% 100%; animation: loadSkel 1.5s infinite;
+    }
+
     .load-more-btn{width:100%;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--g-blue);font-family:'Google Sans';font-weight:500;cursor:pointer;margin-top:12px;transition:.2s}
     .load-more-btn:hover{background:var(--hover-bg);box-shadow:var(--card-shadow)}
     .resolved-count-bar{font-size:13px;color:var(--text-muted);padding:0 0 8px 8px}
@@ -785,12 +799,20 @@
       border-radius: 24px; overflow: hidden;
       border: 1px solid var(--md-sys-color-outline-variant);
       margin-bottom: 32px;
+      max-height: 500px;
+      overflow-y: auto;
     }
     .metrics-table { width: 100%; border-collapse: collapse; text-align: left; }
     .metrics-table th {
       padding: 18px 24px; background: var(--md-sys-color-surface-container-high);
       color: var(--text-muted); font-size: 11px; font-weight: 700;
       text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      position: sticky; top: 0; z-index: 2;
+    }
+    /* Add subtle shadow under sticky header when scrolling */
+    .metrics-table th::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: -1px;
+      height: 1px; background: var(--md-sys-color-outline-variant);
     }
     .metrics-table td { padding: 16px 24px; border-bottom: 1px solid var(--md-sys-color-outline-variant); font-size: 14px; }
     .metrics-table tr:last-child td { border-bottom: none; }
@@ -1121,6 +1143,41 @@
       border: 1px solid var(--md-sys-color-outline-variant);
       font-family: 'DM Mono', monospace, 'Inter'; font-size: 11px; font-weight: 600;
       color: var(--text-main);
+    }
+
+    /* ─────────────────────────────────────────
+       RETURN TO TOP FAB
+    ───────────────────────────────────────── */
+    .return-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 240px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface-variant);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+    }
+    .return-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .return-to-top:hover {
+      background: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface);
+      box-shadow: var(--card-shadow-hover);
     }
 
     /* ─────────────────────────────────────────
@@ -1705,6 +1762,11 @@
     New Escalation
   </div>
 
+  <!-- RETURN TO TOP BUTTON -->
+  <button class="return-to-top" id="returnToTopBtn" onclick="scrollToTop()" title="Return to top">
+    <span class="material-symbols-outlined">arrow_upward</span>
+  </button>
+
   <!-- ══════════════════════════════════
        COMMAND PALETTE
   ══════════════════════════════════ -->
@@ -2018,6 +2080,89 @@ window.onload = function() {
     }
 
     /* ─────────────────────────────────────────
+       RETURN TO TOP LOGIC
+    ───────────────────────────────────────── */
+    window.addEventListener('DOMContentLoaded', function() {
+      var contentArea = document.querySelector('.main-content');
+      var topBtn = document.getElementById('returnToTopBtn');
+      if (contentArea && topBtn) {
+        contentArea.addEventListener('scroll', function() {
+          if (contentArea.scrollTop > 300) {
+            topBtn.classList.add('visible');
+          } else {
+            topBtn.classList.remove('visible');
+          }
+        });
+      }
+    });
+
+    function scrollToTop() {
+      var contentArea = document.querySelector('.main-content');
+      if (contentArea) {
+        contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    /* ─────────────────────────────────────────
+       KEYBOARD NAVIGATION FOR CASES
+    ───────────────────────────────────────── */
+    var focusedCaseIndex = -1;
+
+    function handleCaseKeyboardNavigation(e) {
+      var isMac = navigator.platform.toUpperCase().indexOf('MAC') > -1;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'button' || tag === 'a' || e.target.isContentEditable) return;
+
+      if (currentTab !== 'active' && currentTab !== 'resolved') return;
+
+      var container = currentTab === 'active' ? document.getElementById('activeContainer') : document.getElementById('resolvedContainer');
+      if (!container) return;
+
+      var visibleCases = Array.from(container.querySelectorAll('.case-row')).filter(function(row) {
+        return row.style.display !== 'none';
+      });
+
+      if (visibleCases.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (focusedCaseIndex < visibleCases.length - 1) focusedCaseIndex++;
+        updateCaseFocus(visibleCases);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (focusedCaseIndex > 0) focusedCaseIndex--;
+        updateCaseFocus(visibleCases);
+      } else if (e.key === 'Enter') {
+        if (focusedCaseIndex >= 0 && focusedCaseIndex < visibleCases.length) {
+          e.preventDefault();
+          visibleCases[focusedCaseIndex].classList.toggle('expanded');
+        }
+      }
+    }
+
+    function updateCaseFocus(visibleCases) {
+      visibleCases.forEach(function(row, idx) {
+        if (idx === focusedCaseIndex) {
+          row.classList.add('focused-row');
+          // Check if element is fully in view, if not, smooth scroll
+          var rect = row.getBoundingClientRect();
+          var isFullyVisible = (rect.top >= 64) && (rect.bottom <= window.innerHeight);
+          if (!isFullyVisible) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          row.classList.remove('focused-row');
+        }
+      });
+    }
+
+    function resetCaseFocus() {
+      focusedCaseIndex = -1;
+      document.querySelectorAll('.focused-row').forEach(function(r) { r.classList.remove('focused-row'); });
+    }
+
+    /* ─────────────────────────────────────────
        AUTO REFRESH & SLA TICK
     ───────────────────────────────────────── */
     function startAutoRefresh() {
@@ -2239,6 +2384,13 @@ window.onload = function() {
 
       var cmdkOv  = document.getElementById('cmdkOverlay');
       var shortOv = document.getElementById('shortcutsOverlay');
+
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
+          if (!cmdkOv || !cmdkOv.classList.contains('open')) {
+             handleCaseKeyboardNavigation(e);
+             if (e.defaultPrevented) return;
+          }
+      }
 
       if (cmdkOv && cmdkOv.classList.contains('open')) {
         if (e.key === 'Escape') { closeCommandPalette(); return; }
@@ -2519,6 +2671,7 @@ window.onload = function() {
       currentTab = tabId;
       mineOnlyFilter = false;
       mySubmittedFilter = false;
+      resetCaseFocus();
       document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
       document.querySelectorAll('.view-section').forEach(function(el){ el.classList.remove('active'); });
       document.querySelector('[data-tab="' + tabId + '"]').classList.add('active');
@@ -2663,7 +2816,17 @@ function filterMySubmitted() {
       chipEl.classList.add('qr-selected');
       chips.forEach(function(c) { if (c !== chipEl) c.classList.add('qr-disabled'); });
       var el = document.getElementById('remark-' + rowIdx);
-      if (el) el.value = text;
+      if (el) {
+        el.value = text;
+        // Subtle feedback animation on input
+        el.style.transition = 'box-shadow 0.3s ease, background 0.3s ease';
+        el.style.boxShadow = '0 0 0 3px rgba(52, 199, 89, 0.4)';
+        el.style.background = 'var(--green-lt)';
+        setTimeout(function() {
+          el.style.boxShadow = 'none';
+          el.style.background = 'var(--md-sys-color-surface)';
+        }, 600);
+      }
     }
 
     /* ─────────────────────────────────────────
@@ -3451,6 +3614,15 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         viewMetrics.style.opacity = '0.5';
       }
 
+      // Show skeletons
+      ['trendChart', 'channelDonut', 'symptomBar', 'heatmapChart'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = '<div class="chart-skeleton"></div>';
+          if (id === 'heatmapChart') el.firstChild.style.height = '350px';
+        }
+      });
+
       var team = document.getElementById('metricsTeamFilter').value;
       var timebox = document.getElementById('metricsTimebox').value;
       var range = getTimeboxRange(timebox);
@@ -3623,6 +3795,7 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
     }
 
     function updateTrendChart(data, range, timebox) {
+      setTimeout(function() {
       var container = document.querySelector("#trendChart");
       if (!data.length) {
         if (trendChart) { trendChart.destroy(); trendChart = null; }
@@ -3677,9 +3850,11 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       if (trendChart) trendChart.destroy();
       trendChart = new ApexCharts(document.querySelector("#trendChart"), options);
       trendChart.render();
+      }, 100);
     }
 
     function updateChannelDonut(data) {
+      setTimeout(function() {
       var container = document.querySelector("#channelDonut");
       if (!data.length) {
         if (channelDonut) { channelDonut.destroy(); channelDonut = null; }
@@ -3704,9 +3879,11 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       if (channelDonut) channelDonut.destroy();
       channelDonut = new ApexCharts(document.querySelector("#channelDonut"), options);
       channelDonut.render();
+      }, 100);
     }
 
     function updateSymptomBar(data) {
+      setTimeout(function() {
       var container = document.querySelector("#symptomBar");
       if (!data.length) {
         if (symptomBar) { symptomBar.destroy(); symptomBar = null; }
@@ -3740,9 +3917,11 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       if (symptomBar) symptomBar.destroy();
       symptomBar = new ApexCharts(document.querySelector("#symptomBar"), options);
       symptomBar.render();
+      }, 100);
     }
 
     function updateHeatmap(team, range) {
+      setTimeout(function() {
       var dataset = currentHeatmapMode === 'submit' ? rawActiveCases.concat(rawResolvedCases) : rawResolvedCases;
       var filtered = filterDataByRange(dataset, range, team, currentHeatmapMode === 'submit');
 
@@ -3789,6 +3968,7 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
 
       heatmapChart = new ApexCharts(container, options);
       heatmapChart.render();
+      }, 100);
     }
 
     function computeSmeStreak(ldap) {
