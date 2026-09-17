@@ -102,6 +102,14 @@
     }
 
     /* ─────────────────────────────────────────
+       CUSTOM SCROLLBAR
+    ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline-variant); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--md-sys-color-outline); }
+
+    /* ─────────────────────────────────────────
        RESET & BASE
     ───────────────────────────────────────── */
     *{box-sizing:border-box;margin:0;padding:0}
@@ -565,6 +573,14 @@
     }
     .case-dimmed:hover { opacity: 1; transform: none; }
 
+    .case-row.focused-row {
+      border-color: var(--md-sys-color-primary);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+    }
+    .case-row.focused-row .row-main {
+      background: var(--hover-bg);
+    }
+
     .row-main{padding:12px 20px;display:flex;align-items:flex-start;gap:16px;cursor:pointer;position:relative}
     .row-checkbox-wrap{padding-top:8px}
     .row-avatar{width:40px;height:40px;border-radius:20px;object-fit:cover;flex-shrink:0;background:var(--md-sys-color-surface-variant)}
@@ -665,7 +681,7 @@
     /* ─────────────────────────────────────────
        GENERAL TOAST
     ───────────────────────────────────────── */
-    #toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:14px 24px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:bottom .3s cubic-bezier(.2,0,0,1);z-index:9999;font-weight:500}
+    #toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:14px 24px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:bottom .3s cubic-bezier(.2,0,0,1);z-index:9999;font-weight:500; display:flex; align-items:center; gap:8px;}
     #toast.show{bottom:88px}
 
     /* ─────────────────────────────────────────
@@ -677,6 +693,12 @@
     .skel-block{height:16px;border-radius:4px;margin-bottom:8px}
     .skel-anim{background:linear-gradient(90deg,var(--bg-main) 25%,var(--hover-bg) 50%,var(--bg-main) 75%);background-size:200% 100%;animation:loadSkel 1.5s infinite}
     @keyframes loadSkel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    .chart-skeleton {
+      width: 100%; height: 280px; border-radius: 12px; margin-top: 16px;
+      background: linear-gradient(90deg, var(--md-sys-color-surface-container-high) 25%, var(--md-sys-color-surface-variant) 50%, var(--md-sys-color-surface-container-high) 75%);
+      background-size: 200% 100%; animation: loadSkel 1.5s infinite;
+    }
 
     .load-more-btn{width:100%;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--g-blue);font-family:'Google Sans';font-weight:500;cursor:pointer;margin-top:12px;transition:.2s}
     .load-more-btn:hover{background:var(--hover-bg);box-shadow:var(--card-shadow)}
@@ -777,12 +799,20 @@
       border-radius: 24px; overflow: hidden;
       border: 1px solid var(--md-sys-color-outline-variant);
       margin-bottom: 32px;
+      max-height: 500px;
+      overflow-y: auto;
     }
     .metrics-table { width: 100%; border-collapse: collapse; text-align: left; }
     .metrics-table th {
       padding: 18px 24px; background: var(--md-sys-color-surface-container-high);
       color: var(--text-muted); font-size: 11px; font-weight: 700;
       text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      position: sticky; top: 0; z-index: 2;
+    }
+    /* Add subtle shadow under sticky header when scrolling */
+    .metrics-table th::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: -1px;
+      height: 1px; background: var(--md-sys-color-outline-variant);
     }
     .metrics-table td { padding: 16px 24px; border-bottom: 1px solid var(--md-sys-color-outline-variant); font-size: 14px; }
     .metrics-table tr:last-child td { border-bottom: none; }
@@ -1116,6 +1146,41 @@
     }
 
     /* ─────────────────────────────────────────
+       RETURN TO TOP FAB
+    ───────────────────────────────────────── */
+    .return-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 240px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface-variant);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+    }
+    .return-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .return-to-top:hover {
+      background: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-surface);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    /* ─────────────────────────────────────────
        GAMIFICATION BADGES
     ───────────────────────────────────────── */
     .gami-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: 8px; white-space: nowrap; }
@@ -1280,7 +1345,8 @@
       <div class="top-nav" id="topNav">
         <div class="top-search" id="topSearch">
           <span class="material-symbols-outlined" style="color:var(--md-sys-color-on-surface-variant)">search</span>
-          <input type="text" id="searchInput" placeholder="Search cases…" onkeyup="applyFilters()">
+          <input type="text" id="searchInput" placeholder="Search cases…" oninput="handleSearchInput()">
+          <span id="clearSearchBtn" class="material-symbols-outlined" style="display:none; color:var(--text-muted); cursor:pointer; font-size:16px; margin-right:8px;" onclick="clearSearch()">close</span>
           <span id="filterIndicator" style="display:none;font-size:11px;font-weight:700;background:var(--md-sys-color-primary);color:#fff;padding:2px 8px;border-radius:99px;margin-left:8px;white-space:nowrap;">Filters active</span>
           <span onclick="openCommandPalette()" title="Command palette" style="cursor:pointer;font-size:11px;font-weight:700;color:var(--text-muted);border:1px solid var(--md-sys-color-outline-variant);border-radius:6px;padding:2px 6px;margin-left:8px;white-space:nowrap;">⌘K</span>
       </div>
@@ -1379,9 +1445,9 @@
             </div>
             <div style="display:flex; align-items:center; gap:8px; background:var(--md-sys-color-surface-container-high); padding:4px 12px; border-radius:20px;">
               <span class="material-symbols-outlined" style="font-size:18px; color:var(--text-muted)">calendar_today</span>
-              <input type="date" id="startDate" class="m3-select" style="border:none; background:transparent; padding:0; height:32px; min-width:unset; font-size:12px;" onchange="applyFilters()">
+              <input type="date" id="startDate" class="m3-select" style="border:none; background:transparent; padding:0; height:32px; min-width:unset; font-size:12px; font-family:'Google Sans'; color:var(--text-main);" onchange="applyFilters()">
               <span style="font-size:12px; color:var(--text-muted)">to</span>
-              <input type="date" id="endDate" class="m3-select" style="border:none; background:transparent; padding:0; height:32px; min-width:unset; font-size:12px;" onchange="applyFilters()">
+              <input type="date" id="endDate" class="m3-select" style="border:none; background:transparent; padding:0; height:32px; min-width:unset; font-size:12px; font-family:'Google Sans'; color:var(--text-main);" onchange="applyFilters()">
             </div>
           </div>
         </div>
@@ -1441,9 +1507,9 @@
               </select>
             </div>
             <div class="premium-select-wrap" id="metricsCustomRangeWrap" style="display:none;gap:6px;">
-              <input type="date" id="metricsCustomStart" class="metrics-select" style="width:130px;" onchange="renderMetricsUI()">
+              <input type="date" id="metricsCustomStart" class="metrics-select" style="width:130px; font-family:'Google Sans'; color:var(--text-main);" onchange="renderMetricsUI()">
               <span style="color:var(--text-muted);font-size:12px;">to</span>
-              <input type="date" id="metricsCustomEnd" class="metrics-select" style="width:130px;" onchange="renderMetricsUI()">
+              <input type="date" id="metricsCustomEnd" class="metrics-select" style="width:130px; font-family:'Google Sans'; color:var(--text-main);" onchange="renderMetricsUI()">
             </div>
             <button class="btn-primary" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 16px; border-radius:12px;" onclick="exportWBR()">
               <span class="material-symbols-outlined">download</span> Export
@@ -1507,12 +1573,17 @@
         </div>
 
         <!-- Tables -->
-        <div class="metrics-section-label">SME Efficiency Tracker</div>
+        <div class="metrics-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>SME Efficiency Tracker</span>
+          <button class="btn-icon" onclick="copyTableData('smeTable')" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
+        </div>
         <div class="metrics-table-wrap">
-          <table class="metrics-table">
+          <table class="metrics-table" id="smeTable">
             <thead><tr>
-              <th>Subject Matter Expert</th><th>Cases Resolved</th>
-              <th>Active Locks</th><th>Avg Turnaround Time</th>
+              <th style="cursor:pointer" onclick="sortSmeTable('ldap')">Subject Matter Expert ↕</th>
+              <th style="cursor:pointer" onclick="sortSmeTable('resolved')">Cases Resolved ↕</th>
+              <th style="cursor:pointer" onclick="sortSmeTable('locks')">Active Locks ↕</th>
+              <th style="cursor:pointer" onclick="sortSmeTable('avgMin')">Avg Turnaround Time ↕</th>
             </tr></thead>
             <tbody id="smeMetricsBody"></tbody>
           </table>
@@ -1526,10 +1597,11 @@
             <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-muted);"><span style="width:8px;height:8px;border-radius:50%;background:#B06000;display:inline-block;"></span>Policy</span>
             <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-muted);"><span style="width:8px;height:8px;border-radius:50%;background:#137333;display:inline-block;"></span>Process</span>
             <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-muted);"><span style="width:8px;height:8px;border-radius:50%;background:#5f6368;display:inline-block;"></span>Other</span>
+            <button class="btn-icon" onclick="copyTableData('driverTable')" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
           </div>
         </div>
         <div class="metrics-table-wrap">
-          <table class="metrics-table">
+          <table class="metrics-table" id="driverTable">
             <thead><tr>
               <th>Escalation Driver</th><th>Count</th><th>Distribution</th><th>% of Total</th>
             </tr></thead>
@@ -1537,9 +1609,12 @@
           </table>
         </div>
 
-        <div class="metrics-section-label">Floor Performance (Agent Tracking)</div>
+        <div class="metrics-section-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Floor Performance (Agent Tracking)</span>
+          <button class="btn-icon" onclick="copyTableData('agentTable')" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
+        </div>
         <div class="metrics-table-wrap">
-          <table class="metrics-table">
+          <table class="metrics-table" id="agentTable">
             <thead><tr>
               <th style="cursor:pointer" onclick="sortMetrics('ldap')">Agent LDAP ↕</th>
               <th style="cursor:pointer" onclick="sortMetrics('total')">Total ↕</th>
@@ -1687,6 +1762,11 @@
     New Escalation
   </div>
 
+  <!-- RETURN TO TOP BUTTON -->
+  <button class="return-to-top" id="returnToTopBtn" onclick="scrollToTop()" title="Return to top">
+    <span class="material-symbols-outlined">arrow_upward</span>
+  </button>
+
   <!-- ══════════════════════════════════
        COMMAND PALETTE
   ══════════════════════════════════ -->
@@ -1771,6 +1851,7 @@
     var RESOLVED_LIMIT   = 20;
     var agentStatsArray  = [];
     var currentSort      = { col: 'total', dir: 'desc' };
+    var smeSort          = { col: 'resolved', dir: 'desc' };
     var autoRefreshTimer = null;
     var expandedCards    = new Set();
     var mineOnlyFilter    = false;
@@ -1999,6 +2080,89 @@ window.onload = function() {
     }
 
     /* ─────────────────────────────────────────
+       RETURN TO TOP LOGIC
+    ───────────────────────────────────────── */
+    window.addEventListener('DOMContentLoaded', function() {
+      var contentArea = document.querySelector('.main-content');
+      var topBtn = document.getElementById('returnToTopBtn');
+      if (contentArea && topBtn) {
+        contentArea.addEventListener('scroll', function() {
+          if (contentArea.scrollTop > 300) {
+            topBtn.classList.add('visible');
+          } else {
+            topBtn.classList.remove('visible');
+          }
+        });
+      }
+    });
+
+    function scrollToTop() {
+      var contentArea = document.querySelector('.main-content');
+      if (contentArea) {
+        contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    /* ─────────────────────────────────────────
+       KEYBOARD NAVIGATION FOR CASES
+    ───────────────────────────────────────── */
+    var focusedCaseIndex = -1;
+
+    function handleCaseKeyboardNavigation(e) {
+      var isMac = navigator.platform.toUpperCase().indexOf('MAC') > -1;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'button' || tag === 'a' || e.target.isContentEditable) return;
+
+      if (currentTab !== 'active' && currentTab !== 'resolved') return;
+
+      var container = currentTab === 'active' ? document.getElementById('activeContainer') : document.getElementById('resolvedContainer');
+      if (!container) return;
+
+      var visibleCases = Array.from(container.querySelectorAll('.case-row')).filter(function(row) {
+        return row.style.display !== 'none';
+      });
+
+      if (visibleCases.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (focusedCaseIndex < visibleCases.length - 1) focusedCaseIndex++;
+        updateCaseFocus(visibleCases);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (focusedCaseIndex > 0) focusedCaseIndex--;
+        updateCaseFocus(visibleCases);
+      } else if (e.key === 'Enter') {
+        if (focusedCaseIndex >= 0 && focusedCaseIndex < visibleCases.length) {
+          e.preventDefault();
+          visibleCases[focusedCaseIndex].classList.toggle('expanded');
+        }
+      }
+    }
+
+    function updateCaseFocus(visibleCases) {
+      visibleCases.forEach(function(row, idx) {
+        if (idx === focusedCaseIndex) {
+          row.classList.add('focused-row');
+          // Check if element is fully in view, if not, smooth scroll
+          var rect = row.getBoundingClientRect();
+          var isFullyVisible = (rect.top >= 64) && (rect.bottom <= window.innerHeight);
+          if (!isFullyVisible) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          row.classList.remove('focused-row');
+        }
+      });
+    }
+
+    function resetCaseFocus() {
+      focusedCaseIndex = -1;
+      document.querySelectorAll('.focused-row').forEach(function(r) { r.classList.remove('focused-row'); });
+    }
+
+    /* ─────────────────────────────────────────
        AUTO REFRESH & SLA TICK
     ───────────────────────────────────────── */
     function startAutoRefresh() {
@@ -2081,9 +2245,16 @@ window.onload = function() {
     /* ─────────────────────────────────────────
        TOAST
     ───────────────────────────────────────── */
-    function showToast(msg) {
+    function showToast(msg, type) {
       var t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
+      var icon = 'info';
+      var color = 'inherit';
+      if (type === 'success' || msg.includes('✅') || msg.includes('successful')) { icon = 'check_circle'; color = '#34C759'; msg = msg.replace('✅ ', ''); }
+      else if (type === 'error' || msg.includes('❌') || msg.includes('failed')) { icon = 'error'; color = '#FF3B30'; msg = msg.replace('❌ ', ''); }
+      else if (type === 'warn' || msg.includes('⚠️')) { icon = 'warning'; color = '#FFCC00'; msg = msg.replace('⚠️ ', ''); }
+
+      t.innerHTML = '<span class="material-symbols-outlined" style="color:' + color + ';">' + icon + '</span><span>' + esc(msg) + '</span>';
+      t.classList.add('show');
       setTimeout(function() { t.classList.remove('show'); }, 3000);
     }
 
@@ -2213,6 +2384,13 @@ window.onload = function() {
 
       var cmdkOv  = document.getElementById('cmdkOverlay');
       var shortOv = document.getElementById('shortcutsOverlay');
+
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
+          if (!cmdkOv || !cmdkOv.classList.contains('open')) {
+             handleCaseKeyboardNavigation(e);
+             if (e.defaultPrevented) return;
+          }
+      }
 
       if (cmdkOv && cmdkOv.classList.contains('open')) {
         if (e.key === 'Escape') { closeCommandPalette(); return; }
@@ -2468,6 +2646,19 @@ window.onload = function() {
       el.style.display = (showMine || (hidden && (hasChannelFilter || hasTeamFilter))) ? 'inline-block' : 'none';
     }
 
+    function handleSearchInput() {
+      var val = document.getElementById('searchInput').value;
+      document.getElementById('clearSearchBtn').style.display = val ? 'inline-block' : 'none';
+      applyFilters();
+    }
+    function clearSearch() {
+      var el = document.getElementById('searchInput');
+      el.value = '';
+      document.getElementById('clearSearchBtn').style.display = 'none';
+      el.focus();
+      applyFilters();
+    }
+
     function updateSearchPlaceholder(tab) {
       var el = document.getElementById('searchInput');
       if (tab === 'active')   el.placeholder = 'Search open cases…';
@@ -2480,6 +2671,7 @@ window.onload = function() {
       currentTab = tabId;
       mineOnlyFilter = false;
       mySubmittedFilter = false;
+      resetCaseFocus();
       document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
       document.querySelectorAll('.view-section').forEach(function(el){ el.classList.remove('active'); });
       document.querySelector('[data-tab="' + tabId + '"]').classList.add('active');
@@ -2624,7 +2816,17 @@ function filterMySubmitted() {
       chipEl.classList.add('qr-selected');
       chips.forEach(function(c) { if (c !== chipEl) c.classList.add('qr-disabled'); });
       var el = document.getElementById('remark-' + rowIdx);
-      if (el) el.value = text;
+      if (el) {
+        el.value = text;
+        // Subtle feedback animation on input
+        el.style.transition = 'box-shadow 0.3s ease, background 0.3s ease';
+        el.style.boxShadow = '0 0 0 3px rgba(52, 199, 89, 0.4)';
+        el.style.background = 'var(--green-lt)';
+        setTimeout(function() {
+          el.style.boxShadow = 'none';
+          el.style.background = 'var(--md-sys-color-surface)';
+        }, 600);
+      }
     }
 
     /* ─────────────────────────────────────────
@@ -3132,8 +3334,8 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
           }
         });
 
-        html += '<div class="case-row case-elevated" style="margin-bottom:12px; border-left:4px solid #1a7f37">' +
-          '<div class="row-main" onclick="this.parentElement.classList.toggle(\'expanded\')">' +
+        html += '<div class="case-row case-elevated" style="margin-bottom:12px; border-left:4px solid #1a7f37; cursor:pointer;" onclick="this.classList.toggle(\'expanded\')">' +
+          '<div class="row-main">' +
             getMomaImgClass(c.ldap, 'row-avatar', 48) +
             '<div class="row-content">' +
               '<div style="display:flex; align-items:center; gap:8px;">' +
@@ -3406,6 +3608,21 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
     }
 
     function renderMetricsUI() {
+      var viewMetrics = document.getElementById('view-metrics');
+      if (viewMetrics) {
+        viewMetrics.style.transition = 'opacity 0.2s';
+        viewMetrics.style.opacity = '0.5';
+      }
+
+      // Show skeletons
+      ['trendChart', 'channelDonut', 'symptomBar', 'heatmapChart'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = '<div class="chart-skeleton"></div>';
+          if (id === 'heatmapChart') el.firstChild.style.height = '350px';
+        }
+      });
+
       var team = document.getElementById('metricsTeamFilter').value;
       var timebox = document.getElementById('metricsTimebox').value;
       var range = getTimeboxRange(timebox);
@@ -3441,6 +3658,10 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       });
       agentStatsArray = Object.values(agentMap);
       renderAgentTable();
+
+      setTimeout(function() {
+        if (viewMetrics) viewMetrics.style.opacity = '1';
+      }, 50);
     }
 
     function updateSummaryCards(curr, prev, range, pRange, team) {
@@ -3574,6 +3795,14 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
     }
 
     function updateTrendChart(data, range, timebox) {
+      setTimeout(function() {
+      var container = document.querySelector("#trendChart");
+      if (!data.length) {
+        if (trendChart) { trendChart.destroy(); trendChart = null; }
+        container.innerHTML = '<div class="heatmap-empty"><span class="material-symbols-outlined" style="font-size:40px;opacity:.35">show_chart</span><div>No data for this period</div></div>';
+        return;
+      }
+      container.innerHTML = '';
       var seriesData = [];
       var categories = [];
 
@@ -3621,9 +3850,19 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       if (trendChart) trendChart.destroy();
       trendChart = new ApexCharts(document.querySelector("#trendChart"), options);
       trendChart.render();
+      }, 100);
     }
 
     function updateChannelDonut(data) {
+      setTimeout(function() {
+      var container = document.querySelector("#channelDonut");
+      if (!data.length) {
+        if (channelDonut) { channelDonut.destroy(); channelDonut = null; }
+        container.innerHTML = '<div class="heatmap-empty"><span class="material-symbols-outlined" style="font-size:40px;opacity:.35">donut_large</span><div>No data for this period</div></div>';
+        return;
+      }
+      container.innerHTML = '';
+
       var counts = { Chat: 0, Email: 0, Phone: 0 };
       data.forEach(function(c) { if (counts.hasOwnProperty(c.channel)) counts[c.channel]++; });
 
@@ -3640,9 +3879,19 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       if (channelDonut) channelDonut.destroy();
       channelDonut = new ApexCharts(document.querySelector("#channelDonut"), options);
       channelDonut.render();
+      }, 100);
     }
 
     function updateSymptomBar(data) {
+      setTimeout(function() {
+      var container = document.querySelector("#symptomBar");
+      if (!data.length) {
+        if (symptomBar) { symptomBar.destroy(); symptomBar = null; }
+        container.innerHTML = '<div class="heatmap-empty"><span class="material-symbols-outlined" style="font-size:40px;opacity:.35">bar_chart</span><div>No data for this period</div></div>';
+        return;
+      }
+      container.innerHTML = '';
+
       var syms = {};
       data.forEach(function(c) {
         var s = (c.symptom || 'Other').trim();
@@ -3668,9 +3917,11 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       if (symptomBar) symptomBar.destroy();
       symptomBar = new ApexCharts(document.querySelector("#symptomBar"), options);
       symptomBar.render();
+      }, 100);
     }
 
     function updateHeatmap(team, range) {
+      setTimeout(function() {
       var dataset = currentHeatmapMode === 'submit' ? rawActiveCases.concat(rawResolvedCases) : rawResolvedCases;
       var filtered = filterDataByRange(dataset, range, team, currentHeatmapMode === 'submit');
 
@@ -3717,6 +3968,7 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
 
       heatmapChart = new ApexCharts(container, options);
       heatmapChart.render();
+      }, 100);
     }
 
     function computeSmeStreak(ldap) {
@@ -3737,20 +3989,52 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       return streak;
     }
 
+    var smeStatsArray = [];
+    function sortSmeTable(col) {
+      smeSort.dir = smeSort.col === col ? (smeSort.dir === 'asc' ? 'desc' : 'asc') : 'desc';
+      smeSort.col = col;
+      renderSmeTable();
+    }
+
+    function renderSmeTable() {
+      var sorted = smeStatsArray.slice().sort(function(a,b) {
+        var va = a[smeSort.col], vb = b[smeSort.col];
+        if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+        if (va < vb) return smeSort.dir === 'asc' ? -1 : 1;
+        if (va > vb) return smeSort.dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      var smeHtml = '';
+      sorted.forEach(function(st) {
+        var badges = '';
+        if (st.isFastest) badges += '<span class="gami-badge gami-fastest"><span class="material-symbols-outlined" style="font-size:11px">bolt</span>Fastest</span>';
+        if (st.streak >= 3) badges += '<span class="gami-badge gami-streak"><span class="material-symbols-outlined" style="font-size:11px">local_fire_department</span>' + st.streak + 'd streak</span>';
+        smeHtml += '<tr>' +
+          '<td><div style="display:flex;align-items:center;gap:12px;font-weight:500">' + getMomaImg(st.ldap) + st.ldap + badges + '</div></td>' +
+          '<td>' + st.resolved + '</td>' +
+          '<td>' + st.locks + '</td>' +
+          '<td>' + tatChip(st.avgMin) + '</td>' +
+        '</tr>';
+      });
+      document.getElementById('smeMetricsBody').innerHTML = smeHtml ||
+        '<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:24px">No SME data for this period.</td></tr>';
+    }
+
     function updateSmeTable(data, team) {
       var smes = {};
       rawActiveCases.forEach(function(c) {
         if (team && c.team !== team) return;
         if (c.status==='In Progress' && c.claimedBy) {
           var s = c.claimedBy.split('@')[0].toLowerCase().trim();
-          if (!smes[s]) smes[s]={resolved:0,totalMins:0,locks:0};
+          if (!smes[s]) smes[s]={ldap:s, resolved:0, totalMins:0, locks:0, avgMin:0};
           smes[s].locks++;
         }
       });
       data.forEach(function(c) {
         if (!c.handledBy) return;
         var s = c.handledBy.split('@')[0].toLowerCase().trim();
-        if (!smes[s]) smes[s]={resolved:0,totalMins:0,locks:0};
+        if (!smes[s]) smes[s]={ldap:s, resolved:0, totalMins:0, locks:0, avgMin:0};
         smes[s].resolved++;
         var startTs = c.claimedAt || c.timestamp;
         var end = new Date(c.resolutionTime).getTime();
@@ -3759,30 +4043,23 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
       });
 
       var fastestLdap = null, fastestAvg = Infinity;
-      Object.keys(smes).forEach(function(s) {
+      smeStatsArray = Object.keys(smes).map(function(s) {
         var st = smes[s];
-        if (st.resolved < 3) return;
-        var avg = st.totalMins / st.resolved;
-        if (avg < fastestAvg) { fastestAvg = avg; fastestLdap = s; }
+        st.avgMin = st.resolved > 0 ? st.totalMins / st.resolved : 0;
+        st.streak = computeSmeStreak(s);
+
+        if (st.resolved >= 3 && st.avgMin < fastestAvg) {
+            fastestAvg = st.avgMin;
+            fastestLdap = s;
+        }
+        return st;
       });
 
-      var smeHtml = '';
-      Object.keys(smes).sort().forEach(function(s) {
-        var st = smes[s];
-        var avgMin = st.resolved>0 ? st.totalMins/st.resolved : 0;
-        var streak = computeSmeStreak(s);
-        var badges = '';
-        if (s === fastestLdap) badges += '<span class="gami-badge gami-fastest"><span class="material-symbols-outlined" style="font-size:11px">bolt</span>Fastest</span>';
-        if (streak >= 3) badges += '<span class="gami-badge gami-streak"><span class="material-symbols-outlined" style="font-size:11px">local_fire_department</span>' + streak + 'd streak</span>';
-        smeHtml += '<tr>' +
-          '<td><div style="display:flex;align-items:center;gap:12px;font-weight:500">' + getMomaImg(s) + s + badges + '</div></td>' +
-          '<td>' + st.resolved + '</td>' +
-          '<td>' + st.locks + '</td>' +
-          '<td>' + tatChip(avgMin) + '</td>' +
-        '</tr>';
+      smeStatsArray.forEach(function(st) {
+          st.isFastest = (st.ldap === fastestLdap);
       });
-      document.getElementById('smeMetricsBody').innerHTML = smeHtml ||
-        '<tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:24px">No SME data for this period.</td></tr>';
+
+      renderSmeTable();
     }
 
     function updateDriverTable(data) {
@@ -3861,11 +4138,15 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         var pppPct = ag.total>0 ? Math.round((ag.ppp/ag.total)*100) : 0;
         var cbPct  = ag.total>0 ? Math.round((ag.callback/ag.total)*100) : 0;
         var isHot  = ag.total>=10 && pppPct>=50;
+
+        var cbBar = '<div style="background:var(--md-sys-color-surface-variant); border-radius:4px; height:6px; width:60px; margin-top:4px; overflow:hidden;"><div style="background:var(--md-sys-color-tertiary); height:100%; width:' + cbPct + '%"></div></div>';
+        var pppBar = '<div style="background:var(--md-sys-color-surface-variant); border-radius:4px; height:6px; width:60px; margin-top:4px; overflow:hidden;"><div style="background:var(--md-sys-color-primary); height:100%; width:' + pppPct + '%"></div></div>';
+
         html += '<tr>' +
           '<td><div style="display:flex;align-items:center;gap:12px;font-weight:500">' + getMomaImg(ag.ldap) + esc(ag.ldap) + '</div></td>' +
           '<td style="font-weight:700">' + (isHot ? '<span class="heat-red">' + ag.total + '</span>' : ag.total) + '</td>' +
-          '<td>' + cbPct + '%</td>' +
-          '<td>' + (isHot ? '<span class="heat-red">' + pppPct + '%</span>' : pppPct + '%') + '</td>' +
+          '<td>' + cbPct + '%' + cbBar + '</td>' +
+          '<td>' + (isHot ? '<span class="heat-red">' + pppPct + '%</span>' : pppPct + '%') + pppBar + '</td>' +
         '</tr>';
       });
       document.getElementById('agentMetricsBody').innerHTML = html || '<tr><td colspan="4" style="text-align:center;padding:24px">No data.</td></tr>';
@@ -3883,6 +4164,29 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         sel.innerHTML += '<option value="' + escAttr(t) + '">' + esc(t) + '</option>';
       });
       sel.value = current;
+    }
+
+    function copyTableData(tableId) {
+      var table = document.getElementById(tableId);
+      if (!table) return;
+      var rows = table.querySelectorAll('tr');
+      var tsv = '';
+      rows.forEach(function(row) {
+        if (row.style.display === 'none') return;
+        var cols = row.querySelectorAll('th, td');
+        var rowData = [];
+        cols.forEach(function(col) {
+          // If the column contains the visual bar for % (like Agent table), just get textContent
+          // Also strip out any newlines and extra spaces
+          rowData.push(col.textContent.trim().replace(/\s+/g, ' '));
+        });
+        tsv += rowData.join('\t') + '\n';
+      });
+      navigator.clipboard.writeText(tsv).then(function() {
+        showToast('✅ Table copied to clipboard!', 'success');
+      }).catch(function(err) {
+        showToast('❌ Copy failed: ' + err, 'error');
+      });
     }
 
     /* ─────────────────────────────────────────
@@ -3950,6 +4254,10 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         counter.textContent = count + ' / ' + max;
         counter.style.color = count > max ? 'var(--md-sys-color-error)' : 'var(--text-muted)';
       }
+
+      // Auto-resize
+      el.style.height = 'auto';
+      el.style.height = (el.scrollHeight) + 'px';
     }
 
     function openEscalationModal() {
@@ -4000,6 +4308,7 @@ var resolutionType = l1.value + ' > ' + l2.value + (l3 && l3.value ? ' > ' + l3.
         if (el) {
           el.value = '';
           el.classList.remove('error');
+          if (el.tagName.toLowerCase() === 'textarea') el.style.height = 'auto';
         }
       });
       document.getElementById('f-team-selected').innerHTML = '<span style="color:var(--text-muted)">— Select Team —</span>';
