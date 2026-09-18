@@ -367,12 +367,13 @@ function getSchedule(dayOffset) {
 
     const lastRow = sheet.getLastRow();
     const lastCol = sheet.getLastColumn();
-    if (lastRow < 2 || lastCol < 5) return [];
+    if (lastRow < 3 || lastCol < 5) return [];
 
     // Read header row (date columns start at col E — col C is Site, col D is Role)
-    const headerRange = sheet.getRange(1, 5, 1, lastCol - 4).getValues()[0];
-    // Read all data rows
-    const dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol).getDisplayValues();
+    // Row 2 contains the dates now.
+    const headerRange = sheet.getRange(2, 5, 1, lastCol - 4).getValues()[0];
+    // Read all data rows (Start from Row 3)
+    const dataRange = sheet.getRange(3, 1, lastRow - 2, lastCol).getDisplayValues();
 
     // Build the 3 target dates starting baseOffset days from today
     const PHT_OFFSET_MS = 8 * 60 * 60 * 1000; // UTC+8
